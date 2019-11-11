@@ -1,36 +1,64 @@
+const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-const path = require('path')
+module.exports = (env) => {
+  const isProduction = env === 'production';
+  const CSSExtract = new MiniCssExtractPlugin({
+    filename: 'styles.css'
+  })
 
-
-module.exports = {
-  entry: './src/app.js',
-  output: {
-    path: path.join(__dirname, 'public'),
-    filename: 'bundle.js'
-  },
-  module: {
-    rules: [
-      {
-        loader: 'babel-loader',
-        test: /\.js$/,
-        exclude: /node_modules/
+  console.log('env', env)
+  return {
+      entry: './src/app.js',
+      output: {
+        path: path.join(__dirname, 'public'),
+        filename: 'bundle.js'
       },
-      {
-        test: /\.s?css$/,
-        use: [
-          'style-loader',
-          'css-loader',
-          'sass-loader'
-        ]
+      module: {
+        rules: [
+          {
+            loader: 'babel-loader',
+            test: /\.js$/,
+            exclude: /node_modules/
+          },
+          {
+            test: /\.s?css$/,
+            use: [
+              {
+                loader: MiniCssExtractPlugin.loader,
+                options: {
+                  publicPath: (resourcePath, context) => {
+                    return path.relative(path.dirname(resourcePath), context) + '/';
+                  },
+                },
+              },
+              {
+                loader: 'css-loader',
+                options: {
+                  sourceMap: true
+                }
+              },
+              {
+                loader: 'sass-loader',
+                options: {
+                  sourceMap: true
+                }
+              }
+            ]
+          }
+      ]
+      },
+      plugins: [
+        CSSExtract
+      ],
+      devtool: isProduction ? 'source-map' : 'inline-source-map',
+      devServer: {
+        // host: 'localhost',
+        // port: 3000,
+        contentBase: path.join(__dirname, 'public'),
+        historyApiFallback: true
       }
-  ]
-  },
-  devtool: 'cheap-module-eval-source-map',
-  devServer: {
-    // host: 'localhost',
-    // port: 3000,
-    contentBase: path.join(__dirname, 'public'),
-    historyApiFallback: true
   }
 }
+
 
